@@ -1,88 +1,74 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15
     container_name: vityaz-postgres
     environment:
-      POSTGRES_USER: vityaz
-      POSTGRES_PASSWORD: vityaz_secure_password_123
-      POSTGRES_DB: vityaz_db
+      POSTGRES_DB: vityaz
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - vityaz-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vityaz"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: vityaz-redis
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - vityaz-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # NestJS Backend
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: vityaz-backend
-    environment:
-      NODE_ENV: development
-      DATABASE_URL: postgresql://vityaz:vityaz_secure_password_123@postgres:5432/vityaz_db
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: your_jwt_secret_key_change_in_production
-      TON_MNEMONIC: ${TON_MNEMONIC}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      PORT: 3001
-    ports:
-      - "3001:3001"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    networks:
-      - vityaz-network
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:alpine
-    container_name: vityaz-nginx
+    environment:
+      DATABASE_URL: "postgresql://postgres:password@postgres:5432/vityaz"
+      REDIS_URL: "redis://redis:6379"
+      NODE_ENV: development
+      PORT: 3001
     ports:
-      - "80:80"
-      - "443:443"
+      - "3001:3001"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
+      - ./backend/src:/app/src
+      - ./backend/logs:/app/logs
+    command: npm run start:dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vityaz-frontend
     depends_on:
       - backend
-    networks:
-      - vityaz-network
+    environment:
+      VITE_API_URL: "http://backend:3001"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+    command: npm run dev
 
 volumes:
   postgres_data:
-  redis_data:
 
 networks:
-  vityaz-network:
-    driver: bridge
+  default:
+    name: vityaz-network

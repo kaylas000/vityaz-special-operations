@@ -1,286 +1,178 @@
-import Phaser from 'phaser'
-import { CombatEngine } from '../services/combat.engine'
-import { io, Socket } from 'socket.io-client'
+import Phaser from 'phaser';
+import { PlaceholderGraphics } from '../components/Graphics/PlaceholderGraphics';
 
-interface Player {
-  id: string
-  x: number
-  y: number
-  angle: number
-  health: number
-  ammo: number
-  weapon: string
-  isAlive: boolean
-}
-
-export default class BattleScene extends Phaser.Scene {
-  private combatEngine: CombatEngine
-  private socket: Socket
-  private players: Map<string, Phaser.Physics.Arcade.Sprite> = new Map()
-  private bullets: Phaser.Physics.Arcade.Group
-  private player: Phaser.Physics.Arcade.Sprite
-  private playerData: Player = {
-    id: 'local_player',
-    x: 512,
-    y: 400,
-    angle: 0,
-    health: 100,
-    ammo: 30,
-    weapon: 'AK-74M',
-    isAlive: true,
-  }
-  private cursors: Phaser.Types.Input.Keyboard.CursorKeys
-  private hud: {
-    health: Phaser.GameObjects.Text
-    ammo: Phaser.GameObjects.Text
-    kills: Phaser.GameObjects.Text
-    score: Phaser.GameObjects.Text
-  }
-  private kills: number = 0
-  private score: number = 0
-  private lastShotTime: number = 0
-  private fireRate: number = 100 // ms between shots
+export class BattleScene extends Phaser.Scene {
+  private player: Phaser.Physics.Arcade.Sprite | null = null;
+  private enemies: Phaser.Physics.Arcade.Sprite[] = [];
+  private bullets: Phaser.Physics.Arcade.Sprite[] = [];
+  private keys: any;
+  private score: number = 0;
+  private health: number = 100;
+  private ammo: number = 30;
+  private healthBar: any;
+  private scoreText: Phaser.GameObjects.Text | null = null;
+  private ammoText: Phaser.GameObjects.Text | null = null;
 
   constructor() {
-    super({ key: 'BattleScene' })
-    this.combatEngine = new CombatEngine()
+    super('BattleScene');
   }
 
   preload() {
-    // Load assets
-    this.load.image('ground', 'assets/ground.png')
-    this.load.image('bullet', 'assets/bullet.png')
-    this.load.image('player', 'assets/player.png')
-    this.load.image('enemy', 'assets/enemy.png')
+    // Create placeholder graphics
+    const graphics = this.make.graphics({ x: 0, y: 0, add: false });
+    
+    // Player sprite
+    graphics.fillStyle(0x00ff00, 1);
+    graphics.fillRect(0, 0, 32, 64);
+    graphics.generateTexture('player', 32, 64);
+    
+    // Enemy sprite
+    graphics.clear();
+    graphics.fillStyle(0xff0000, 1);
+    graphics.fillRect(0, 0, 32, 64);
+    graphics.generateTexture('enemy', 32, 64);
+    
+    // Bullet
+    graphics.clear();
+    graphics.fillStyle(0xffff00, 1);
+    graphics.fillCircle(4, 4, 4);
+    graphics.generateTexture('bullet', 8, 8);
+    
+    graphics.destroy();
   }
 
   create() {
-    // Create world
-    const graphics = this.make.graphics({ x: 0, y: 0, add: false })
-    graphics.fillStyle(0x2a4a4a, 1)
-    graphics.fillRect(0, 0, 1024, 768)
-    graphics.generateTexture('battleground', 1024, 768)
-    graphics.destroy()
-
-    this.add.image(0, 0, 'battleground').setOrigin(0)
+    // Background
+    this.add.rectangle(512, 384, 1024, 768, 0x222222);
+    this.add.grid(512, 384, 1024, 768, 64, 64, 0x444444, 1);
 
     // Create player
-    this.player = this.physics.add.sprite(512, 400, null)
-    this.player.setCollideWorldBounds(true)
-    this.player.setBounce(0.2)
-    this.player.setDisplaySize(32, 64)
-
-    // Create bullets group
-    this.bullets = this.physics.add.group({
-      classType: Phaser.Physics.Arcade.Image,
-    })
+    this.player = this.physics.add.sprite(512, 384, 'player');
+    this.player.setCollideWorldBounds(true);
+    this.player.setBounce(0.1);
 
     // Create enemies
-    this.createEnemies()
-
-    // Setup controls
-    this.cursors = this.input.keyboard.createCursorKeys()
-    this.input.keyboard.on('keydown-SPACE', () => this.fire())
-    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      this.playerData.angle = Phaser.Math.Angle.Between(
-        this.player.x,
-        this.player.y,
-        pointer.x,
-        pointer.y,
-      )
-    })
-
-    // Setup HUD
-    this.setupHUD()
-
-    // Setup WebSocket
-    this.setupWebSocket()
-
-    // Physics
-    this.physics.add.collider(
-      this.player,
-      this.bullets,
-      undefined,
-      undefined,
-      this,
-    )
-  }
-
-  private createEnemies() {
     for (let i = 0; i < 3; i++) {
-      const x = Phaser.Math.Between(100, 900)
-      const y = Phaser.Math.Between(100, 700)
-
-      const enemy = this.physics.add.sprite(x, y, null)
-      enemy.setDisplaySize(32, 64)
-      enemy.setCollideWorldBounds(true)
-      enemy.setBounce(0.2)
-
-      const playerId = `enemy_${i}`
-      this.players.set(playerId, enemy)
-    }
-  }
-
-  private setupHUD() {
-    this.hud = {
-      health: this.add.text(16, 16, '', {
-        fontSize: '20px',
-        color: '#00ff00',
-        fontFamily: 'monospace',
-      }),
-      ammo: this.add.text(16, 50, '', {
-        fontSize: '20px',
-        color: '#00ff00',
-        fontFamily: 'monospace',
-      }),
-      kills: this.add.text(16, 84, '', {
-        fontSize: '20px',
-        color: '#ffaa00',
-        fontFamily: 'monospace',
-      }),
-      score: this.add.text(512 - 100, 16, '', {
-        fontSize: '24px',
-        color: '#8B0000',
-        fontFamily: 'monospace',
-        fontStyle: 'bold',
-      }),
-    }
-  }
-
-  private setupWebSocket() {
-    const apiUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3001'
-    this.socket = io(apiUrl, {
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5,
-    })
-
-    this.socket.on('connect', () => {
-      console.log('✅ Connected to battle server')
-      this.socket.emit('battle:join', { playerId: this.playerData.id })
-    })
-
-    this.socket.on('battle:player_update', (data: Player) => {
-      if (data.id !== this.playerData.id) {
-        let sprite = this.players.get(data.id)
-        if (!sprite) {
-          sprite = this.physics.add.sprite(data.x, data.y, null)
-          sprite.setDisplaySize(32, 64)
-          this.players.set(data.id, sprite)
-        }
-        sprite.x = data.x
-        sprite.y = data.y
-        sprite.rotation = data.angle
-      }
-    })
-
-    this.socket.on('battle:shot', (data: { x: number; y: number; angle: number }) => {
-      this.createRemoteShot(data.x, data.y, data.angle)
-    })
-
-    this.socket.on('battle:hit', (data: { playerId: string; damage: number }) => {
-      if (data.playerId === this.playerData.id) {
-        this.playerData.health -= data.damage
-        if (this.playerData.health <= 0) {
-          this.playerData.isAlive = false
-          this.scene.restart()
-        }
-      }
-    })
-  }
-
-  private fire() {
-    const now = this.time.now
-    if (now - this.lastShotTime < this.fireRate || this.playerData.ammo <= 0) {
-      return
+      const x = Math.random() * 1024;
+      const y = Math.random() * 768;
+      const enemy = this.physics.add.sprite(x, y, 'enemy');
+      enemy.setVelocity(
+        Phaser.Math.Between(-100, 100),
+        Phaser.Math.Between(-100, 100)
+      );
+      enemy.setCollideWorldBounds(true);
+      enemy.setBounce(1);
+      this.enemies.push(enemy);
     }
 
-    this.lastShotTime = now
-    this.playerData.ammo--
+    // Input
+    this.keys = this.input.keyboard?.createCursorKeys();
 
-    // Create bullet
-    const bullet = this.bullets.create(
-      this.player.x,
-      this.player.y,
-      null,
-    ) as Phaser.Physics.Arcade.Image
+    // UI
+    this.scoreText = this.add.text(10, 10, `Score: ${this.score}`, {
+      fontSize: '20px',
+      color: '#ffffff',
+    });
 
-    // Calculate velocity
-    const speed = 400
-    const vx = Math.cos(this.playerData.angle) * speed
-    const vy = Math.sin(this.playerData.angle) * speed
+    this.ammoText = this.add.text(10, 40, `Ammo: ${this.ammo}`, {
+      fontSize: '20px',
+      color: '#ffff00',
+    });
 
-    bullet.setVelocity(vx, vy)
-    bullet.setRotation(this.playerData.angle)
-    bullet.setDisplaySize(4, 4)
+    // Health bar
+    this.healthBar = this.add.rectangle(1024 - 150, 20, 140, 20, 0x00ff00);
+    this.add.rectangle(1024 - 150, 20, 140, 20).setStrokeStyle(2, 0xffffff);
 
-    // Check for hits
-    this.physics.overlap(bullet, Array.from(this.players.values()), (b, e) => {
-      if (bullet && e) {
-        const damage = this.combatEngine.calculateDamage(
-          this.playerData.weapon,
-          'close', // range
-        )
-        this.kills++
-        this.score += damage
-
-        bullet.destroy()
-        e.destroy()
-
-        // Notify server
-        this.socket.emit('battle:shot', {
-          x: this.player.x,
-          y: this.player.y,
-          angle: this.playerData.angle,
-        })
-      }
-    })
-  }
-
-  private createRemoteShot(x: number, y: number, angle: number) {
-    const bullet = this.bullets.create(x, y, null) as Phaser.Physics.Arcade.Image
-    const speed = 400
-    const vx = Math.cos(angle) * speed
-    const vy = Math.sin(angle) * speed
-
-    bullet.setVelocity(vx, vy)
-    bullet.setRotation(angle)
-    bullet.setDisplaySize(4, 4)
+    // Click to shoot
+    this.input.on('pointerdown', () => this.shoot());
   }
 
   update() {
-    if (!this.playerData.isAlive) return
+    if (!this.player) return;
 
-    // Movement
-    this.player.setVelocity(0, 0)
-
-    if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-200)
-    } else if (this.cursors.right.isDown) {
-      this.player.setVelocityX(200)
+    // Player movement
+    this.player.setVelocity(0, 0);
+    if (this.keys?.left.isDown || this.keys?.a.isDown) {
+      this.player.setVelocityX(-200);
+    }
+    if (this.keys?.right.isDown || this.keys?.d.isDown) {
+      this.player.setVelocityX(200);
+    }
+    if (this.keys?.up.isDown || this.keys?.w.isDown) {
+      this.player.setVelocityY(-200);
+    }
+    if (this.keys?.down.isDown || this.keys?.s.isDown) {
+      this.player.setVelocityY(200);
     }
 
-    if (this.cursors.up.isDown) {
-      this.player.setVelocityY(-200)
-    } else if (this.cursors.down.isDown) {
-      this.player.setVelocityY(200)
+    // Update bullets
+    this.bullets.forEach((bullet, index) => {
+      if (bullet.y < 0 || bullet.y > 768 || bullet.x < 0 || bullet.x > 1024) {
+        bullet.destroy();
+        this.bullets.splice(index, 1);
+      }
+    });
+
+    // Update UI
+    if (this.scoreText) {
+      this.scoreText.setText(`Score: ${this.score}`);
+    }
+    if (this.ammoText) {
+      this.ammoText.setText(`Ammo: ${this.ammo}`);
     }
 
-    // Update player data
-    this.playerData.x = this.player.x
-    this.playerData.y = this.player.y
+    // Health bar
+    const healthPercent = (this.health / 100) * 140;
+    this.healthBar.setDisplaySize(Math.max(0, healthPercent), 20);
+  }
 
-    // Send update to server
-    this.socket.emit('battle:update', this.playerData)
+  private shoot() {
+    if (this.ammo <= 0 || !this.player) return;
 
-    // Update HUD
-    this.hud.health.setText(`HP: ${Math.max(0, this.playerData.health)}/100`)
-    this.hud.ammo.setText(`AMMO: ${this.playerData.ammo}`)
-    this.hud.kills.setText(`KILLS: ${this.kills}`)
-    this.hud.score.setText(`${this.score}`)
+    const bullet = this.physics.add.sprite(
+      this.player.x,
+      this.player.y,
+      'bullet'
+    );
 
-    // Rotate player towards mouse
-    this.player.rotation = this.playerData.angle
+    // Get mouse position
+    const mouseX = this.input.mousePointer.x;
+    const mouseY = this.input.mousePointer.y;
+
+    // Calculate direction
+    const angle = Phaser.Math.Angle.Between(
+      this.player.x,
+      this.player.y,
+      mouseX,
+      mouseY
+    );
+
+    bullet.setVelocity(
+      Math.cos(angle) * 300,
+      Math.sin(angle) * 300
+    );
+
+    this.bullets.push(bullet);
+    this.ammo--;
+  }
+
+  takeDamage(amount: number) {
+    this.health -= amount;
+    if (this.health <= 0) {
+      this.gameOver();
+    }
+  }
+
+  addScore(points: number) {
+    this.score += points;
+  }
+
+  private gameOver() {
+    this.scene.pause();
+    this.add.text(512, 384, 'GAME OVER', {
+      fontSize: '40px',
+      color: '#ff0000',
+      align: 'center',
+    }).setOrigin(0.5);
   }
 }

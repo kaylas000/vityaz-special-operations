@@ -1,130 +1,67 @@
-import { Injectable, Logger as NestLogger } from '@nestjs/common';
-import * as winston from 'winston';
-import * as DailyRotateFile from 'winston-daily-rotate-file';
+import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
-export class LoggerService {
-  private logger: winston.Logger;
-  private nestLogger = new NestLogger('LoggerService');
+export class LoggerService implements NestLoggerService {
+  private logDir = 'logs';
+  private maxFileSize = 10 * 1024 * 1024; // 10MB
 
   constructor() {
-    const logFormat = winston.format.combine(
-      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-      winston.format.errors({ stack: true }),
-      winston.format.json(),
-      winston.format.printf(({ timestamp, level, message, ...meta }) => {
-        return JSON.stringify({
-          timestamp,
-          level,
-          message,
-          ...meta,
-        });
-      })
-    );
-
-    this.logger = winston.createLogger({
-      level: process.env.LOG_LEVEL || 'info',
-      format: logFormat,
-      defaultMeta: { service: 'vityaz-api' },
-      transports: [
-        // Console transport for development
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.colorize(),
-            winston.format.simple()
-          ),
-        }),
-
-        // Daily rotate file for info logs
-        new DailyRotateFile({
-          filename: 'logs/info-%DATE%.log',
-          datePattern: 'YYYY-MM-DD',
-          maxSize: '100m',
-          maxDays: '30d',
-          level: 'info',
-        }),
-
-        // Daily rotate file for errors
-        new DailyRotateFile({
-          filename: 'logs/error-%DATE%.log',
-          datePattern: 'YYYY-MM-DD',
-          maxSize: '100m',
-          maxDays: '30d',
-          level: 'error',
-        }),
-      ],
-      exceptionHandlers: [
-        new DailyRotateFile({
-          filename: 'logs/exceptions-%DATE%.log',
-          datePattern: 'YYYY-MM-DD',
-          maxSize: '100m',
-          maxDays: '30d',
-        }),
-      ],
-    });
-  }
-
-  debug(message: string, context?: string, data?: any) {
-    this.logger.debug(message, { context, data });
-  }
-
-  info(message: string, context?: string, data?: any) {
-    this.logger.info(message, { context, data });
-    if (process.env.NODE_ENV === 'development') {
-      this.nestLogger.log(`[${context}] ${message}`);
+    if (!fs.existsSync(this.logDir)) {
+      fs.mkdirSync(this.logDir);
     }
   }
 
-  warn(message: string, context?: string, data?: any) {
-    this.logger.warn(message, { context, data });
+  log(message: string, context?: string) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] [${context || 'APP'}] ${message}`;
+    console.log(logMessage);
+    this.writeToFile('app.log', logMessage);
+  }
+
+  error(message: string, trace?: string, context?: string) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] [ERROR] [${context || 'APP'}] ${message}\n${trace || ''}`;
+    console.error(logMessage);
+    this.writeToFile('error.log', logMessage);
+  }
+
+  warn(message: string, context?: string) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] [WARN] [${context || 'APP'}] ${message}`;
+    console.warn(logMessage);
+    this.writeToFile('warn.log', logMessage);
+  }
+
+  debug(message: string, context?: string) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] [DEBUG] [${context || 'APP'}] ${message}`;
     if (process.env.NODE_ENV === 'development') {
-      this.nestLogger.warn(`[${context}] ${message}`);
+      console.debug(logMessage);
     }
+    this.writeToFile('debug.log', logMessage);
   }
 
-  error(message: string, error?: Error, context?: string, data?: any) {
-    const stack = error?.stack || new Error().stack;
-    this.logger.error(message, { context, data, stack });
-    if (process.env.NODE_ENV === 'development') {
-      this.nestLogger.error(`[${context}] ${message}`, error?.stack);
-    }
+  verbose(message: string, context?: string) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] [VERBOSE] [${context || 'APP'}] ${message}`;
+    console.log(logMessage);
+    this.writeToFile('verbose.log', logMessage);
   }
 
-  // Business logic logging
-  logUserAction(userId: string, action: string, details?: any) {
-    this.info(`User action: ${action}`, 'UserAction', { userId, details });
-  }
-
-  logBattleEvent(battleId: string, event: string, details?: any) {
-    this.info(`Battle event: ${event}`, 'BattleEvent', { battleId, details });
-  }
-
-  logTokenTransaction(
-    fromUser: string,
-    toUser: string,
-    amount: number,
-    type: string
-  ) {
-    this.info(`Token transaction: ${type}`, 'TokenTransaction', {
-      from: fromUser,
-      to: toUser,
-      amount,
-    });
-  }
-
-  logPerformance(operation: string, duration: number, details?: any) {
-    const level = duration > 1000 ? 'warn' : 'info';
-    this.logger[level](
-      `Operation performance: ${operation} took ${duration}ms`,
-      {
-        operation,
-        duration,
-        details,
+  private writeToFile(filename: string, message: string) {
+    const filepath = path.join(this.logDir, filename);
+    
+    // Check file size and rotate if needed
+    if (fs.existsSync(filepath)) {
+      const stats = fs.statSync(filepath);
+      if (stats.size > this.maxFileSize) {
+        const backupPath = `${filepath}.${Date.now()}`;
+        fs.renameSync(filepath, backupPath);
       }
-    );
-  }
+    }
 
-  logSecurityEvent(event: string, details?: any) {
-    this.warn(`Security event: ${event}`, 'SecurityEvent', details);
+    fs.appendFileSync(filepath, message + '\n', 'utf8');
   }
 }
