@@ -1,0 +1,80 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: vityaz-postgres
+    environment:
+      POSTGRES_USER: vityaz
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password_123}
+      POSTGRES_DB: vityaz_prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U vityaz']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: vityaz-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: vityaz-backend
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://vityaz:${DB_PASSWORD:-secure_password_123}@postgres:5432/vityaz_prod
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      TON_NETWORK: ${TON_NETWORK:-mainnet}
+      TON_MNEMONIC: ${TON_MNEMONIC}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://vityaz.game}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:3001/health']
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: vityaz-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: vityaz-network

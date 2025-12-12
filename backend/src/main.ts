@@ -1,30 +1,28 @@
 import { NestFactory } from '@nestjs/core'
-import { ValidationPipe } from '@nestjs/common'
 import { AppModule } from './app.module'
+import { SocketIOAdapter } from './socket-io.adapter'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    logger: ['log', 'error', 'warn'],
-  })
+  const app = await NestFactory.create(AppModule)
 
   // Enable CORS
   app.enableCors({
-    origin: '*',
+    origin: process.env.CORS_ORIGIN?.split(',') || '*',
     credentials: true,
   })
 
-  // Global validation pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  )
+  // WebSocket adapter
+  app.useWebSocketAdapter(new SocketIOAdapter(app))
 
-  const PORT = process.env.PORT || 3001
-  await app.listen(PORT)
-  console.log(`🥊 VITYAZ Backend listening on port ${PORT}`)
+  // Global prefix
+  app.setGlobalPrefix('api')
+
+  const port = process.env.PORT || 3001
+  await app.listen(port)
+
+  console.log(`🚀 VITYAZ API running on http://localhost:${port}`)
+  console.log(`🎮 WebSocket gateway ready`)
+  console.log(`🔗 Smart contract network: ${process.env.TON_NETWORK || 'testnet'}`)
 }
 
 bootstrap()

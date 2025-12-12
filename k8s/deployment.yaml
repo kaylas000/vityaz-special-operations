@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vityaz-backend
+  namespace: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: vityaz-backend
+  template:
+    metadata:
+      labels:
+        app: vityaz-backend
+    spec:
+      containers:
+      - name: backend
+        image: vityaz-backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3001
+          name: http
+        env:
+        - name: NODE_ENV
+          value: production
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: vityaz-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: vityaz-secrets
+              key: redis-url
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: vityaz-secrets
+              key: jwt-secret
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vityaz-backend-service
+  namespace: production
+spec:
+  type: LoadBalancer
+  selector:
+    app: vityaz-backend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3001
+    name: http
