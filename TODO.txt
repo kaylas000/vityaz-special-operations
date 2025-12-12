@@ -1,0 +1,290 @@
+VITYAZ: SPECIAL OPERATIONS - MASTER TODO LIST
+==============================================
+
+PHASE 1: CRITICAL (THIS WEEK) - 25 HOURS
+
+[ ] 1.1 Deploy Smart Contracts to TON Testnet (5h)
+    [ ] Install TON tools
+    [ ] Setup testnet wallet
+    [ ] Compile VityazToken.fc
+    [ ] Deploy VityazToken
+    [ ] Test transfers
+    [ ] Deploy Marketplace.fc
+    [ ] Deploy Staking.func
+    [ ] Update .env with addresses
+    [ ] Document deployment
+
+[ ] 1.2 Add Basic Graphics Assets (8h)
+    [ ] Create player sprite
+    [ ] Create animations
+    [ ] Create enemy sprites
+    [ ] Create background maps
+    [ ] Create UI elements
+    [ ] Create weapons sprites
+    [ ] Integrate into Phaser
+    [ ] Test rendering
+
+[ ] 1.3 Add Unit Test Framework (8h)
+    [ ] Install Jest & Vitest
+    [ ] Setup jest.config.js
+    [ ] Write combat engine tests (5+)
+    [ ] Write token service tests (5+)
+    [ ] Write API endpoint tests (10+)
+    [ ] Write frontend tests (5+)
+    [ ] Setup coverage reporting
+    [ ] Target 30%+ coverage
+
+[ ] 1.4 Setup Error Handling & Logging (4h)
+    [ ] Create global error filter
+    [ ] Create custom exceptions
+    [ ] Add request validation
+    [ ] Install Winston logger
+    [ ] Setup logging service
+    [ ] Add logging to key services
+    [ ] Setup log rotation
+    [ ] Test error handling
+
+---
+
+PHASE 2: HIGH PRIORITY (NEXT 1-2 WEEKS) - 44 HOURS
+
+[ ] 2.1 Complete Frontend UI (20h)
+    [ ] Create menu scene
+    [ ] Create settings screen
+    [ ] Create pause menu
+    [ ] Create game over screen
+    [ ] Enhance HUD
+    [ ] Create inventory UI
+    [ ] Test all UI
+
+[ ] 2.2 Deploy to Ethereum Sepolia (4h)
+    [ ] Install Hardhat
+    [ ] Configure Sepolia network
+    [ ] Compile ERC-20 contract
+    [ ] Deploy to Sepolia
+    [ ] Verify on Etherscan
+    [ ] Test transfers
+    [ ] Document address
+
+[ ] 2.3 Deploy to Solana Devnet (4h)
+    [ ] Install Solana CLI
+    [ ] Configure devnet
+    [ ] Build Anchor program
+    [ ] Deploy to devnet
+    [ ] Test program
+    [ ] Document program ID
+
+[ ] 2.4 Telegram Mini App Integration (12h)
+    [ ] Create Telegram bot
+    [ ] Configure webhook
+    [ ] Create telegram controller
+    [ ] Handle /start command
+    [ ] Handle /play command
+    [ ] Frontend Telegram detection
+    [ ] User data authentication
+    [ ] Full screen launching
+    [ ] Test desktop
+    [ ] Test mobile
+
+[ ] 2.5 Database Migration Scripts (4h)
+    [ ] Create Prisma migration
+    [ ] Create seed script
+    [ ] Update package.json
+    [ ] Test migrations
+    [ ] Create backup scripts
+    [ ] Test restores
+
+---
+
+PHASE 3: MEDIUM PRIORITY (WEEKS 3-4) - 52 HOURS
+
+[ ] 3.1 Performance Optimization (16h)
+    [ ] Add database indexes
+    [ ] Query optimization
+    [ ] Connection pooling
+    [ ] Frontend bundle analysis
+    [ ] Code splitting
+    [ ] Asset optimization
+    [ ] Service worker setup
+    [ ] Redis caching
+    [ ] Target <200ms response time
+
+[ ] 3.2 Advanced Matchmaking (12h)
+    [ ] Calculate skill rating
+    [ ] Create matchmaking queue
+    [ ] Implement matching algorithm
+    [ ] Prevent smurfing
+    [ ] Team balancing
+    [ ] Test matchmaking
+
+[ ] 3.3 Clan/Team System (16h)
+    [ ] Create Clan model
+    [ ] Clan CRUD endpoints
+    [ ] Clan chat feature
+    [ ] Clan tournaments
+    [ ] Clan rankings
+    [ ] Permissions system
+    [ ] Test clan features
+
+[ ] 3.4 Monitoring & Observability (8h)
+    [ ] Install Prometheus client
+    [ ] Add metrics
+    [ ] Export metrics endpoint
+    [ ] Create Grafana dashboards
+    [ ] Setup Sentry
+    [ ] Configure error capture
+    [ ] Test monitoring
+
+---
+
+PHASE 4: NICE TO HAVE (WEEKS 5+)
+
+[ ] 4.1 Advanced Features
+    [ ] Campaign mode
+    [ ] Coop dungeons
+    [ ] Trading market
+    [ ] Spectator mode
+    [ ] Replay system
+    [ ] Skin customization
+    [ ] Battle pass system
+    [ ] Seasonal content
+
+[ ] 4.2 Community Features
+    [ ] Discord integration
+    [ ] Twitch integration
+    [ ] Streaming mode
+    [ ] Highlights/clips
+    [ ] Creator program
+    [ ] Feedback system
+
+[ ] 4.3 Mobile Optimization
+    [ ] Mobile UI
+    [ ] Touch controls
+    [ ] Responsive design
+    [ ] React Native version
+    [ ] iOS app
+    [ ] Android app
+
+---
+
+TESTING & QUALITY ASSURANCE
+
+[ ] Unit test coverage >80%
+[ ] Integration test suite
+[ ] E2E test suite
+[ ] Load test 10K concurrent
+[ ] Security penetration test
+[ ] Contract formal verification
+[ ] Performance profiling
+[ ] Accessibility testing
+[ ] Cross-browser testing
+
+---
+
+SECURITY & COMPLIANCE
+
+[ ] Request security audit quote
+[ ] Schedule audit with firm
+[ ] Run internal security review
+[ ] Fix pre-audit findings
+[ ] Run formal security audit
+[ ] Fix audit findings
+[ ] Penetration testing
+[ ] DDoS mitigation setup
+[ ] KYC/AML implementation
+[ ] Terms of Service
+[ ] Privacy Policy
+[ ] Regional compliance check
+
+---
+
+PRODUCTION INFRASTRUCTURE
+
+[ ] Setup AWS/Azure/GCP account
+[ ] Create VPC and security groups
+[ ] Setup RDS PostgreSQL
+[ ] Setup ElastiCache Redis
+[ ] Setup Lambda/Fargate
+[ ] Configure load balancer
+[ ] Setup CloudFlare WAF
+[ ] Configure DDoS protection
+[ ] Setup SSL/TLS
+[ ] Configure CDN
+[ ] Setup database backups
+[ ] Create disaster recovery plan
+[ ] Configure auto-scaling
+[ ] Setup secrets management
+
+---
+
+DOCUMENTATION
+
+[ ] Update GAMEPLAY.md
+[ ] Update CRYPTOECONOMICS.md
+[ ] Create deployment runbook
+[ ] Create incident response guide
+[ ] Create architecture decision records
+[ ] Create performance tuning guide
+[ ] Create troubleshooting guide
+[ ] Create API OpenAPI/Swagger docs
+[ ] Record video tutorials
+
+---
+
+COMMUNITY & MARKETING
+
+[ ] Create Discord server
+[ ] Create Telegram community
+[ ] Create Twitter account
+[ ] Create YouTube channel
+[ ] Recruit alpha testers
+[ ] Create content calendar
+[ ] Plan launch event
+[ ] Prepare press release
+[ ] Reach out to influencers
+[ ] Create tutorial videos
+
+---
+
+PR-LAUNCH CHECKLIST
+
+[ ] All tests passing
+[ ] Zero critical bugs
+[ ] Performance targets met
+[ ] Security audit passed
+[ ] All documentation complete
+[ ] Team trained
+[ ] Monitoring active
+[ ] Support team ready
+[ ] Community engaged
+[ ] Marketing ready
+
+---
+
+STATUS TRACKING
+
+Phase 1: CRITICAL
+  Progress: [ ] 0%  [ ] 25%  [ ] 50%  [ ] 75%  [ ] 100%
+  ETA: Dec 19
+
+Phase 2: HIGH
+  Progress: [ ] 0%  [ ] 25%  [ ] 50%  [ ] 75%  [ ] 100%
+  ETA: Dec 27
+
+Phase 3: MEDIUM
+  Progress: [ ] 0%  [ ] 25%  [ ] 50%  [ ] 75%  [ ] 100%
+  ETA: Jan 10
+
+Testnet Launch
+  Status: [ ] Ready  [ ] In Progress  [ ] Not Started
+  ETA: Jan 15
+
+Mainnet Launch
+  Status: [ ] Ready  [ ] In Progress  [ ] Not Started
+  ETA: Mar 1
+
+---
+
+Last Updated: December 12, 2025
+Project Status: ALPHA
+Phase: Completion & Polish
