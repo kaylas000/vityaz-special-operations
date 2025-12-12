@@ -1,0 +1,48 @@
+{
+  "name": "vityaz-special-operations",
+  "version": "0.1.0",
+  "description": "Tactical FPS with Crypto-Economics - Play-to-Earn Combat Simulator",
+  "author": "@kaylas000",
+  "license": "MIT",
+  "private": false,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "contracts"
+  ],
+  "scripts": {
+    "install-all": "npm install && npm --workspace=frontend install && npm --workspace=backend install && npm --workspace=contracts install",
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "db:migrate": "npm --workspace=backend run prisma:migrate",
+    "db:seed": "npm --workspace=backend run prisma:seed",
+    "contracts:deploy:ton": "npm --workspace=contracts run deploy:ton",
+    "contracts:deploy:eth": "npm --workspace=contracts run deploy:eth",
+    "contracts:deploy:sol": "npm --workspace=contracts run deploy:sol"
+  },
+  "keywords": [
+    "tactical-fps",
+    "play-to-earn",
+    "blockchain",
+    "crypto-gaming",
+    "vityaz",
+    "special-forces",
+    "nft",
+    "ton",
+    "ethereum",
+    "solana"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kaylas000/vityaz-special-operations.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kaylas000/vityaz-special-operations/issues"
+  },
+  "homepage": "https://vityaz.game"
+}
