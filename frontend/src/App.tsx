@@ -4,6 +4,7 @@ import MainMenuScene from './scenes/MainMenuScene'
 import MenuScene from './scenes/MenuScene'
 import BattleScene from './scenes/BattleScene'
 import TrainingScene from './scenes/TrainingScene'
+import CompleteGameScene from './scenes/CompleteGameScene'
 import GameHUD from './components/GameHUD'
 import './App.css'
 
@@ -26,7 +27,7 @@ export default function App() {
           debug: false,
         },
       },
-      scene: [MainMenuScene, MenuScene, BattleScene, TrainingScene],
+      scene: [MainMenuScene, MenuScene, BattleScene, TrainingScene, CompleteGameScene],
       render: {
         pixelArt: false,
         antialias: true,
