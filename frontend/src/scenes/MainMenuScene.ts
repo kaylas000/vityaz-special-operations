@@ -90,7 +90,7 @@ export default class MainMenuScene extends Phaser.Scene {
         // Fade out and transition to game
         this.cameras.main.fade(300, 0, 0, 0)
         this.time.delayedCall(300, () => {
-          this.scene.start('BattleScene')
+          this.scene.start('CompleteGame')
         })
       },
       'play'
