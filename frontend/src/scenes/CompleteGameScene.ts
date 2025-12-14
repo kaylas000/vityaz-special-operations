@@ -665,14 +665,56 @@ export default class CompleteGameScene extends Phaser.Scene {
 
     const overlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7);
     overlay.setScrollFactor(0);
+    overlay.setDepth(100);
 
     const text = this.add.text(
       400,
-      250,
-      `GAME OVER\n\nFinal Score: ${this.playerData.score}\nWave: ${this.playerData.wave}\nKills: ${this.playerData.kills}\n\nPress R to Restart`,
-      { font: '24px Arial', color: '#ff0000', align: 'center' }
+      200,
+      `GAME OVER\n\nFinal Score: ${this.playerData.score}\nWave: ${this.playerData.wave}\nKills: ${this.playerData.kills}`,
+      { 
+        font: '28px Arial', 
+        color: '#ff0000', 
+        align: 'center',
+        backgroundColor: '#000000',
+        padding: { x: 20, y: 20 }
+      }
     );
     text.setOrigin(0.5);
     text.setScrollFactor(0);
+    text.setDepth(101);
+
+    // Create "Return to Menu" button
+    const buttonWidth = 200;
+    const buttonHeight = 50;
+    const button = this.add.rectangle(400, 380, buttonWidth, buttonHeight, 0x6b5d4f);
+    button.setStrokeStyle(2, 0xe8d4b0);
+    button.setScrollFactor(0);
+    button.setDepth(101);
+    button.setInteractive({ useHandCursor: true });
+
+    const buttonText = this.add.text(400, 380, 'RETURN TO MENU', {
+      font: '18px Arial',
+      color: '#ffffff',
+    });
+    buttonText.setOrigin(0.5);
+    buttonText.setScrollFactor(0);
+    buttonText.setDepth(102);
+
+    button.on('pointerover', () => {
+      button.setFillStyle(0x8b7d6b);
+      buttonText.setColor('#ffd700');
+    });
+
+    button.on('pointerout', () => {
+      button.setFillStyle(0x6b5d4f);
+      buttonText.setColor('#ffffff');
+    });
+
+    button.on('pointerdown', () => {
+      this.cameras.main.fade(300, 0, 0, 0);
+      this.time.delayedCall(300, () => {
+        this.scene.start('MainMenuScene');
+      });
+    });
   }
 }
