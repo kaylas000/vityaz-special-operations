@@ -1,0 +1,8 @@
+# Effect Sprites
+
+Contains visual effect sprites:
+- explosion_frames/ (particle effects)
+- blood_splatter.png
+- muzzle_flash.png
+
+Note: Procedural effects are generated in ProceduralGraphics.ts
