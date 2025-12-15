@@ -1,11 +1,11 @@
 /**
  * 🏐 GRAPHICS INTEGRATION MANAGER - VITYAZ
  * Central coordinator for all graphics systems
- * Manages procedural graphics, animations, effects, and UI rendering
+ * Manages AI sprites, procedural graphics, animations, effects, and UI rendering
  * 
  * @author VITYAZ Development Team
- * @version 1.0.0
- * @date 2025-12-14
+ * @version 2.0.0 - AI Sprite Support Added
+ * @date 2025-12-15
  */
 
 import { Scene, Physics } from 'phaser';
@@ -18,7 +18,12 @@ import VisualEffectsEngine from './VisualEffectsEngine';
 import { UIGraphicsEngine } from './UIGraphicsEngine';
 
 /**
- * Main graphics integration manager
+ * Graphics mode: 'ai-sprites' or 'procedural'
+ */
+type GraphicsMode = 'ai-sprites' | 'procedural';
+
+/**
+ * Main graphics integration manager with AI sprite support
  */
 export class GraphicsIntegrationManager {
   private scene: Scene;
@@ -29,9 +34,14 @@ export class GraphicsIntegrationManager {
   private particleSystem: ParticleAnimationSystem;
   private spriteCache: Map<string, any> = new Map();
 
+  // Graphics mode (AI or procedural)
+  private graphicsMode: GraphicsMode = 'ai-sprites';
+  private aiSpritesAvailable: boolean = false;
+
   // State tracking
-  private playerSprite: any;
-  private enemySprites: Map<string, any> = new Map();
+  private playerSprite: Phaser.GameObjects.Container | null = null;
+  private playerCurrentFrame: string = 'idle';
+  private enemySprites: Map<string, Phaser.GameObjects.Container> = new Map();
   private gameState: GameState = {
     health: 100,
     maxHealth: 100,
@@ -43,8 +53,9 @@ export class GraphicsIntegrationManager {
     enemiesRemaining: 10,
   };
 
-  constructor(scene: Scene) {
+  constructor(scene: Scene, mode: GraphicsMode = 'ai-sprites') {
     this.scene = scene;
+    this.graphicsMode = mode;
     this.proceduralgraphics = ProceduralGraphics;
     this.animationSystem = AnimationSystem;
     this.visualEffects = new VisualEffectsEngine(scene);
@@ -64,8 +75,17 @@ export class GraphicsIntegrationManager {
    */
   private initialize(): void {
     console.log('🏐 Initializing Graphics Integration Manager...');
+    console.log(`   Mode: ${this.graphicsMode}`);
 
-    // Initialize procedural graphics
+    // Check if AI sprites are available
+    this.aiSpritesAvailable = this.checkAISpritesAvailable();
+
+    if (this.graphicsMode === 'ai-sprites' && !this.aiSpritesAvailable) {
+      console.warn('⚠️  AI sprites not found, falling back to procedural graphics');
+      this.graphicsMode = 'procedural';
+    }
+
+    // Initialize procedural graphics (always available as fallback)
     ProceduralGraphics.initialize();
 
     // Initialize animation system
@@ -82,46 +102,125 @@ export class GraphicsIntegrationManager {
     console.log('✅ Graphics Integration Manager initialized successfully');
   }
 
+  /**
+   * Check if AI-generated sprites are loaded in the scene
+   */
+  private checkAISpritesAvailable(): boolean {
+    const requiredSprites = [
+      'player-idle',
+      'player-walk-down',
+      'enemy-basic',
+      'weapon-ak74m',
+    ];
+
+    return requiredSprites.every((key) =>
+      this.scene.textures.exists(key)
+    );
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // PLAYER SPRITE MANAGEMENT
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
    * Create player sprite with all components
+   * Uses AI sprites if available, falls back to procedural
    */
-  createPlayerSprite(x: number, y: number): any {
-    // Create composite player sprite
+  createPlayerSprite(x: number, y: number): Phaser.GameObjects.Container {
     const playerGroup = this.scene.add.container(x, y);
 
-    // Head
-    const head = this.scene.add.image(0, -8, '');
-    const headCanvas = ProceduralGraphics.drawPlayerHead(0, 0);
-    this.createTextureFromCanvas('player-head', headCanvas);
-    // head.setTexture('player-head');
+    if (this.graphicsMode === 'ai-sprites') {
+      // Use AI-generated sprites
+      const playerImage = this.scene.add.image(0, 0, 'player-idle');
+      playerImage.setOrigin(0.5, 0.5);
+      playerImage.setScale(2); // 64x64 → 128x128 on screen
+      playerImage.setName('player-body');
 
-    // Body with uniform (including CRAPOV beret symbol)
-    const body = this.scene.add.image(0, 0, '');
-    const bodyCanvas = ProceduralGraphics.drawPlayerUniform(0, 0);
-    this.createTextureFromCanvas('player-uniform', bodyCanvas);
-    // body.setTexture('player-uniform');
+      // Add weapon sprite
+      const weapon = this.scene.add.image(20, 0, 'weapon-ak74m');
+      weapon.setOrigin(0, 0.5);
+      weapon.setScale(2.5);
+      weapon.setName('player-weapon');
 
-    // Limbs
-    const limbs = this.scene.add.image(0, 0, '');
-    const limbsCanvas = ProceduralGraphics.drawPlayerLimbs(0, 0);
-    this.createTextureFromCanvas('player-limbs', limbsCanvas);
-    // limbs.setTexture('player-limbs');
+      playerGroup.add([playerImage, weapon]);
+      console.log('✅ Player created with AI sprites');
+    } else {
+      // Use procedural graphics (original system)
+      const head = this.scene.add.image(0, -8, '');
+      const headCanvas = ProceduralGraphics.drawPlayerHead(0, 0);
+      this.createTextureFromCanvas('player-head', headCanvas);
+      head.setTexture('player-head');
 
-    // Weapon
-    const weapon = this.scene.add.image(6, -4, '');
-    const weaponCanvas = ProceduralGraphics.drawPlayerWeapon(0, 0);
-    this.createTextureFromCanvas('player-weapon', weaponCanvas);
-    // weapon.setTexture('player-weapon');
+      const body = this.scene.add.image(0, 0, '');
+      const bodyCanvas = ProceduralGraphics.drawPlayerUniform(0, 0);
+      this.createTextureFromCanvas('player-uniform', bodyCanvas);
+      body.setTexture('player-uniform');
 
-    playerGroup.add([head, body, limbs, weapon]);
+      const limbs = this.scene.add.image(0, 0, '');
+      const limbsCanvas = ProceduralGraphics.drawPlayerLimbs(0, 0);
+      this.createTextureFromCanvas('player-limbs', limbsCanvas);
+      limbs.setTexture('player-limbs');
+
+      const weapon = this.scene.add.image(6, -4, '');
+      const weaponCanvas = ProceduralGraphics.drawPlayerWeapon(0, 0);
+      this.createTextureFromCanvas('player-weapon', weaponCanvas);
+      weapon.setTexture('player-weapon');
+
+      playerGroup.add([head, body, limbs, weapon]);
+      console.log('✅ Player created with procedural graphics');
+    }
+
     playerGroup.setDepth(10);
     this.playerSprite = playerGroup;
 
     return playerGroup;
+  }
+
+  /**
+   * Update player sprite animation frame
+   */
+  updatePlayerAnimation(
+    direction: 'idle' | 'down' | 'up' | 'left' | 'right'
+  ): void {
+    if (!this.playerSprite || this.graphicsMode !== 'ai-sprites') return;
+
+    const playerImage = this.playerSprite.getByName('player-body') as Phaser.GameObjects.Image;
+    if (!playerImage) return;
+
+    let textureKey = 'player-idle';
+    let flipX = false;
+
+    switch (direction) {
+      case 'idle':
+        textureKey = 'player-idle';
+        break;
+      case 'down':
+        textureKey = this.scene.textures.exists('player-walk-down')
+          ? 'player-walk-down'
+          : 'player-idle';
+        break;
+      case 'up':
+        textureKey = this.scene.textures.exists('player-walk-up')
+          ? 'player-walk-up'
+          : 'player-idle';
+        break;
+      case 'left':
+        textureKey = this.scene.textures.exists('player-walk-down')
+          ? 'player-walk-down'
+          : 'player-idle';
+        flipX = true;
+        break;
+      case 'right':
+        textureKey = this.scene.textures.exists('player-walk-down')
+          ? 'player-walk-down'
+          : 'player-idle';
+        flipX = false;
+        break;
+    }
+
+    playerImage.setTexture(textureKey);
+    playerImage.setFlipX(flipX);
+    this.playerCurrentFrame = direction;
   }
 
   /**
@@ -132,9 +231,45 @@ export class GraphicsIntegrationManager {
     x: number,
     y: number,
     type: 'basic' | 'armed' | 'heavy' = 'basic'
-  ): any {
+  ): Phaser.GameObjects.Container {
     const enemyGroup = this.scene.add.container(x, y);
 
+    if (this.graphicsMode === 'ai-sprites') {
+      // Use AI-generated enemy sprites
+      const spriteKey = `enemy-${type}`;
+      
+      if (this.scene.textures.exists(spriteKey)) {
+        const enemyImage = this.scene.add.image(0, 0, spriteKey);
+        enemyImage.setOrigin(0.5, 0.5);
+        
+        // Different scales for different enemy types
+        const scale = type === 'heavy' ? 2.2 : 1.8;
+        enemyImage.setScale(scale);
+        
+        enemyGroup.add(enemyImage);
+        console.log(`✅ Enemy '${type}' created with AI sprite`);
+      } else {
+        console.warn(`⚠️  AI sprite '${spriteKey}' not found, using procedural`);
+        this.addProceduralEnemy(enemyGroup, type);
+      }
+    } else {
+      // Use procedural graphics
+      this.addProceduralEnemy(enemyGroup, type);
+    }
+
+    enemyGroup.setDepth(9);
+    this.enemySprites.set(enemyId, enemyGroup);
+    
+    return enemyGroup;
+  }
+
+  /**
+   * Add procedural enemy to container (fallback)
+   */
+  private addProceduralEnemy(
+    container: Phaser.GameObjects.Container,
+    type: 'basic' | 'armed' | 'heavy'
+  ): void {
     let enemyCanvas;
     let textureKey = `enemy-${type}`;
 
@@ -144,22 +279,15 @@ export class GraphicsIntegrationManager {
         break;
       case 'heavy':
         enemyCanvas = ProceduralGraphics.drawHeavyEnemy(0, 0);
-        textureKey = 'enemy-heavy';
         break;
       case 'basic':
       default:
         enemyCanvas = ProceduralGraphics.drawBasicEnemy(0, 0);
     }
 
-    this.createTextureFromCanvas(textureKey, enemyCanvas);
-
-    const sprite = this.scene.add.image(0, 0, '');
-    // sprite.setTexture(textureKey);
-    enemyGroup.add(sprite);
-    enemyGroup.setDepth(9);
-
-    this.enemySprites.set(enemyId, enemyGroup);
-    return enemyGroup;
+    this.createTextureFromCanvas(textureKey + '-proc', enemyCanvas);
+    const sprite = this.scene.add.image(0, 0, textureKey + '-proc');
+    container.add(sprite);
   }
 
   /**
@@ -184,7 +312,9 @@ export class GraphicsIntegrationManager {
     if (!this.playerSprite) return;
 
     // Play attack animation
-    AnimationSystem.playAnimation(this.playerSprite as any, 'player-attack');
+    if (this.graphicsMode === 'procedural') {
+      AnimationSystem.playAnimation(this.playerSprite as any, 'player-attack');
+    }
 
     // Calculate muzzle position based on direction
     const muzzleX = this.playerSprite.x + Math.cos(direction) * 10;
@@ -351,6 +481,26 @@ export class GraphicsIntegrationManager {
   }
 
   /**
+   * Switch graphics mode dynamically
+   */
+  switchGraphicsMode(mode: GraphicsMode): void {
+    if (mode === 'ai-sprites' && !this.aiSpritesAvailable) {
+      console.error('❌ Cannot switch to AI sprites: sprites not loaded');
+      return;
+    }
+
+    this.graphicsMode = mode;
+    console.log(`🔄 Graphics mode switched to: ${mode}`);
+  }
+
+  /**
+   * Get current graphics mode
+   */
+  getGraphicsMode(): GraphicsMode {
+    return this.graphicsMode;
+  }
+
+  /**
    * Get game state
    */
   getGameState(): GameState {
@@ -360,7 +510,7 @@ export class GraphicsIntegrationManager {
   /**
    * Get player sprite
    */
-  getPlayerSprite(): any {
+  getPlayerSprite(): Phaser.GameObjects.Container | null {
     return this.playerSprite;
   }
 
