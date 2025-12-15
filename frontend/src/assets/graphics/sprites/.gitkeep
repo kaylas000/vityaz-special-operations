@@ -1,0 +1,13 @@
+# Sprite Assets Directory
+
+This directory will contain AI-generated sprite assets for VITYAZ: Special Operations.
+
+## Subdirectories:
+- characters/  - Player and enemy sprites
+- weapons/    - Weapon sprites
+- effects/    - Visual effect sprites
+- ui/         - UI element sprites
+
+## Generation
+See tools/generate_sprites.py for AI sprite generation.
+See tools/README.md for detailed instructions.
