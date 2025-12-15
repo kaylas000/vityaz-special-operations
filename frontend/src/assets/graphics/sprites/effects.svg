@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 64" width="192" height="64">
+  <!-- Explosion (0-64) -->
+  <g id="explosion">
+    <!-- Center flash -->
+    <circle cx="16" cy="32" r="8" fill="#FFD700" />
+    <!-- Outer explosion ring -->
+    <circle cx="16" cy="32" r="12" fill="#FFA500" opacity="0.7" />
+    <!-- Smoke effect -->
+    <circle cx="10" cy="26" r="6" fill="#555" opacity="0.6" />
+    <circle cx="22" cy="26" r="6" fill="#555" opacity="0.6" />
+    <circle cx="16" cy="38" r="6" fill="#555" opacity="0.6" />
+    <!-- Fragments -->
+    <polygon points="16,16 18,20 14,20" fill="#8B4513" />
+    <polygon points="20,28 25,28 22,32" fill="#8B4513" />
+    <polygon points="12,40 15,44 10,42" fill="#8B4513" />
+  </g>
+
+  <!-- Blood Splatter (64-128) -->
+  <g id="blood">
+    <!-- Central blood spot -->
+    <circle cx="80" cy="32" r="6" fill="#8B0000" />
+    <!-- Splatter drops -->
+    <ellipse cx="74" cy="24" rx="3" ry="4" fill="#A00000" />
+    <ellipse cx="86" cy="24" rx="3" ry="4" fill="#A00000" />
+    <ellipse cx="75" cy="40" rx="3" ry="4" fill="#8B0000" />
+    <ellipse cx="85" cy="42" rx="2" ry="3" fill="#8B0000" />
+    <!-- Spray effect -->
+    <line x1="80" y1="26" x2="78" y2="18" stroke="#A00000" stroke-width="1" opacity="0.7" />
+    <line x1="80" y1="38" x2="82" y2="46" stroke="#8B0000" stroke-width="1" opacity="0.7" />
+  </g>
+
+  <!-- Muzzle Flash (128-192) -->
+  <g id="muzzleflash">
+    <!-- Inner bright flash -->
+    <polygon points="152,28 160,30 158,32 150,32" fill="#FFFF00" />
+    <!-- Outer orange flash -->
+    <polygon points="150,25 162,32 158,35 148,30" fill="#FF8C00" opacity="0.8" />
+    <!-- Smoke puff -->
+    <circle cx="164" cy="28" r="5" fill="#555" opacity="0.5" />
+    <circle cx="168" cy="26" r="4" fill="#666" opacity="0.4" />
+    <!-- Light rays -->
+    <line x1="148" y1="20" x2="140" y2="14" stroke="#FFFF00" stroke-width="1" opacity="0.6" />
+    <line x1="165" y1="20" x2="172" y2="10" stroke="#FFFF00" stroke-width="1" opacity="0.6" />
+  </g>
+</svg>
