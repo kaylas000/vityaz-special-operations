@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 96" width="64" height="96">
+  <defs>
+    <style>
+      .enemy-body { fill: #8b0000; }
+      .enemy-skin { fill: #c9a961; }
+      .enemy-head { fill: #d4a574; }
+      .outline { stroke: #000; stroke-width: 0.5; fill: none; }
+    </style>
+  </defs>
+
+  <!-- Head -->
+  <circle cx="32" cy="18" r="10" class="enemy-head" />
+  <circle cx="28" cy="16" r="1.5" fill="#000" />
+  <circle cx="36" cy="16" r="1.5" fill="#000" />
+
+  <!-- Red Combat Gear -->
+  <rect x="20" y="28" width="24" height="20" class="enemy-body" rx="2" />
+  <rect x="22" y="30" width="20" height="16" fill="#600000" />
+
+  <!-- Arms -->
+  <rect x="12" y="32" width="5" height="16" class="enemy-skin" />
+  <rect x="52" y="32" width="5" height="16" class="enemy-skin" />
+
+  <!-- Legs -->
+  <rect x="20" y="48" width="9" height="20" class="enemy-body" />
+  <rect x="35" y="48" width="9" height="20" class="enemy-body" />
+
+  <!-- Feet -->
+  <rect x="20" y="68" width="9" height="6" fill="#1a1a1a" />
+  <rect x="35" y="68" width="9" height="6" fill="#1a1a1a" />
+</svg>
