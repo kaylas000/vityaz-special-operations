@@ -1,19 +1,16 @@
 import Phaser from 'phaser';
 
-// ============================================================================
-// VITYAZ: COMPLETE PRODUCTION-READY GAME IMPLEMENTATION
-// ============================================================================
-// This is a FULLY PLAYABLE game with:
-// - Complete game mechanics
-// - All weapons working
-// - Enemy AI
-// - Wave system
-// - Score tracking
-// - Sound effects
-// - Particle effects
-// - UI/HUD
-// - Multiplayer ready
-// ============================================================================
+// Level configuration interface
+interface LevelConfig {
+  id: string;
+  name: string;
+  difficulty: string;
+  difficultyLevel: number;
+  initialEnemies: number;
+  enemyWaveMultiplier: number;
+  enemyDamageMultiplier: number;
+  rewardMultiplier: number;
+}
 
 interface PlayerData {
   x: number;
@@ -49,6 +46,9 @@ interface WeaponSpec {
 }
 
 export default class CompleteGameScene extends Phaser.Scene {
+  // Level configuration
+  private levelConfig: LevelConfig | null = null;
+
   // Player
   private player: Phaser.Physics.Arcade.Sprite | null = null;
   private playerData: PlayerData = {
@@ -57,7 +57,7 @@ export default class CompleteGameScene extends Phaser.Scene {
     angle: 0,
     health: 100,
     maxHealth: 100,
-    currentWeapon: 0, // 0=AK74M, 1=SVD, 2=RPK74, 3=PMM
+    currentWeapon: 0,
     ammo: { 0: 300, 1: 150, 2: 300, 3: 150 },
     score: 0,
     kills: 0,
@@ -142,6 +142,7 @@ export default class CompleteGameScene extends Phaser.Scene {
   private scoreText: Phaser.GameObjects.Text | null = null;
   private waveText: Phaser.GameObjects.Text | null = null;
   private weaponText: Phaser.GameObjects.Text | null = null;
+  private difficultyText: Phaser.GameObjects.Text | null = null;
   private fpsText: Phaser.GameObjects.Text | null = null;
 
   // Game state
@@ -174,7 +175,14 @@ export default class CompleteGameScene extends Phaser.Scene {
     }
   }
 
-  create() {
+  create(data: any) {
+    // Load level configuration from data
+    if (data && data.level) {
+      this.levelConfig = data.level;
+      console.log(`Starting level: ${this.levelConfig.name} (${this.levelConfig.difficulty})`);
+      this.enemiesPerWave = this.levelConfig.initialEnemies;
+    }
+
     // Create game world
     this.setupPhysics();
     this.createPlayer();
@@ -259,6 +267,20 @@ export default class CompleteGameScene extends Phaser.Scene {
       color: '#00ff00',
     });
     this.weaponText.setScrollFactor(0);
+
+    // NEW: Difficulty indicator
+    const difficultyColor = this.getDifficultyColor();
+    this.difficultyText = this.add.text(
+      10,
+      135,
+      `DIFFICULTY: ${this.levelConfig?.difficulty || 'NORMAL'}`,
+      {
+        font: '16px Arial',
+        color: difficultyColor,
+        fontStyle: 'bold',
+      }
+    );
+    this.difficultyText.setScrollFactor(0);
 
     this.fpsText = this.add.text(700, 10, 'FPS: 60', {
       font: '12px Arial',
@@ -426,7 +448,7 @@ export default class CompleteGameScene extends Phaser.Scene {
       this.bullets,
       this.enemies,
       (bullet: any, enemy: any) => {
-        this.hitEnemy(enemy, 20); // 20 damage per bullet
+        this.hitEnemy(enemy, 20);
         bullet.destroy();
       }
     );
@@ -494,7 +516,10 @@ export default class CompleteGameScene extends Phaser.Scene {
     enemy.health -= damage;
 
     if (enemy.health <= 0) {
-      this.playerData.score += 100;
+      // Apply reward multiplier from level config
+      const baseReward = 100;
+      const reward = baseReward * (this.levelConfig?.rewardMultiplier || 1);
+      this.playerData.score += Math.round(reward);
       this.playerData.kills++;
       this.enemyCount--;
 
@@ -555,7 +580,6 @@ export default class CompleteGameScene extends Phaser.Scene {
       this.spawnEnemy();
       this.enemiesSpawned++;
       this.enemyCount++;
-      this.time.delayedCall(500, () => {}); // 500ms between spawns
     }
 
     // Wave complete
@@ -580,6 +604,18 @@ export default class CompleteGameScene extends Phaser.Scene {
     graphics.generateTexture(`enemyTexture_${Date.now()}`, 24, 24);
     graphics.destroy();
 
+    const baseEnemyHealth = 30 + this.playerData.wave * 5;
+    const baseEnemySpeed = 80 + this.playerData.wave * 10;
+    const baseEnemyDamage = 5 + this.playerData.wave * 2;
+
+    // Apply level difficulty multipliers
+    const enemyHealth = this.levelConfig
+      ? baseEnemyHealth * this.levelConfig.enemyDamageMultiplier
+      : baseEnemyHealth;
+    const enemyDamage = this.levelConfig
+      ? baseEnemyDamage * this.levelConfig.enemyDamageMultiplier
+      : baseEnemyDamage;
+
     const enemy = this.enemies.create(
       x,
       y,
@@ -587,15 +623,27 @@ export default class CompleteGameScene extends Phaser.Scene {
     ) as any;
     enemy.setBounce(1);
     enemy.setCollideWorldBounds(true);
-    enemy.health = 30 + this.playerData.wave * 5;
-    enemy.maxHealth = enemy.health;
-    enemy.speed = 80 + this.playerData.wave * 10;
-    enemy.damage = 5 + this.playerData.wave * 2;
+    enemy.health = enemyHealth;
+    enemy.maxHealth = enemyHealth;
+    enemy.speed = baseEnemySpeed;
+    enemy.damage = enemyDamage;
   }
 
   private completeWave() {
     this.playerData.wave++;
-    this.enemiesPerWave = Math.min(5 + this.playerData.wave, 20);
+    
+    // Apply wave multiplier from level config
+    let newEnemiesPerWave = this.levelConfig?.initialEnemies || 5;
+    if (this.levelConfig) {
+      newEnemiesPerWave = Math.round(
+        this.levelConfig.initialEnemies *
+        Math.pow(this.levelConfig.enemyWaveMultiplier, this.playerData.wave - 1)
+      );
+    } else {
+      newEnemiesPerWave = Math.min(5 + this.playerData.wave, 20);
+    }
+    
+    this.enemiesPerWave = newEnemiesPerWave;
     this.waveInProgress = false;
 
     this.time.delayedCall(3000, () => {
@@ -636,6 +684,21 @@ export default class CompleteGameScene extends Phaser.Scene {
     }
   }
 
+  private getDifficultyColor(): string {
+    switch (this.levelConfig?.difficulty) {
+      case 'Easy':
+        return '#4a9e4a'; // Green
+      case 'Normal':
+        return '#4a7a9e'; // Blue
+      case 'Hard':
+        return '#9e6b4a'; // Orange
+      case 'Insane':
+        return '#9e4a4a'; // Red
+      default:
+        return '#ffffff';
+    }
+  }
+
   private showPauseMenu() {
     // Simple pause overlay
     const overlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7);
@@ -667,10 +730,11 @@ export default class CompleteGameScene extends Phaser.Scene {
     overlay.setScrollFactor(0);
     overlay.setDepth(100);
 
+    const levelName = this.levelConfig?.name || 'UNKNOWN';
     const text = this.add.text(
       400,
       200,
-      `GAME OVER\n\nFinal Score: ${this.playerData.score}\nWave: ${this.playerData.wave}\nKills: ${this.playerData.kills}`,
+      `GAME OVER\n\nLevel: ${levelName}\nFinal Score: ${this.playerData.score}\nWave: ${this.playerData.wave}\nKills: ${this.playerData.kills}`,
       { 
         font: '28px Arial', 
         color: '#ff0000', 
