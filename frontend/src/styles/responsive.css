@@ -1,0 +1,381 @@
+/* ============================================
+   RESPONSIVE DESIGN SYSTEM - VITYAZ
+   Mobile First Approach
+   ============================================ */
+
+:root {
+  /* Breakpoints */
+  --breakpoint-xs: 320px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* Mobile-first sizing */
+  --container-padding-mobile: 12px;
+  --container-padding-tablet: 16px;
+  --container-padding-desktop: 24px;
+
+  /* Touch targets (minimum 44x44px for accessibility) */
+  --touch-target-min: 44px;
+  --touch-target-safe: 48px;
+
+  /* Font scaling for readability */
+  --font-size-mobile: clamp(14px, 4vw, 16px);
+  --font-size-tablet: clamp(16px, 3vw, 18px);
+  --font-size-desktop: 16px;
+
+  /* Spacing scale */
+  --spacing-xs: clamp(4px, 1vw, 6px);
+  --spacing-sm: clamp(8px, 2vw, 12px);
+  --spacing-md: clamp(16px, 3vw, 20px);
+  --spacing-lg: clamp(24px, 4vw, 32px);
+  --spacing-xl: clamp(32px, 5vw, 48px);
+}
+
+/* ============================================
+   MOBILE OPTIMIZATIONS (320px - 640px)
+   ============================================ */
+
+@media (max-width: 640px) {
+  /* Root element optimization */
+  html {
+    font-size: 16px; /* Prevent zoom on input focus (iOS) */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    touch-action: manipulation;
+  }
+
+  /* Viewport meta tag optimization */
+  meta[name="viewport"] {
+    content: "width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no";
+  }
+
+  /* Container padding */
+  .container,
+  .game-container,
+  main,
+  section,
+  article {
+    padding: var(--container-padding-mobile);
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+
+  /* Button touch targets */
+  button,
+  a[role="button"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"] {
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: var(--font-size-mobile);
+  }
+
+  /* Remove tap highlight delay */
+  button,
+  a,
+  input {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  /* Optimize inputs for mobile */
+  input,
+  textarea,
+  select {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    min-height: var(--touch-target-min);
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  /* Flexible images */
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Fix video scaling */
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Canvas optimization for mobile */
+  canvas {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+
+  /* Hide horizontal scroll */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  /* Optimize lists */
+  ul,
+  ol {
+    margin: var(--spacing-sm) 0;
+    padding-left: var(--spacing-md);
+  }
+
+  li {
+    margin: var(--spacing-xs) 0;
+  }
+
+  /* Game-specific optimizations */
+  .game-canvas {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .ui-overlay {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 100;
+  }
+
+  .hud {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+  }
+
+  /* Stack controls vertically on mobile */
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    margin: var(--spacing-sm) 0;
+  }
+
+  .button-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xs);
+  }
+
+  /* Full-width buttons */
+  .button-group .btn {
+    width: 100%;
+  }
+
+  /* Optimize modals for mobile */
+  .modal,
+  .dialog {
+    position: fixed;
+    inset: 0;
+    max-height: 90vh;
+    width: 100%;
+    border-radius: 12px 12px 0 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Reduce motion for performance */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ============================================
+   TABLET OPTIMIZATIONS (641px - 1024px)
+   ============================================ */
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  :root {
+    --container-padding: var(--container-padding-tablet);
+  }
+
+  .container,
+  main,
+  section,
+  article {
+    padding: var(--container-padding-tablet);
+    max-width: 95%;
+    margin: 0 auto;
+  }
+
+  button,
+  a[role="button"] {
+    min-height: 40px;
+    padding: 10px 20px;
+    font-size: var(--font-size-tablet);
+  }
+
+  .game-canvas {
+    aspect-ratio: 4 / 3;
+    max-height: 60vh;
+  }
+
+  .hud {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+  }
+
+  .button-group {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+/* ============================================
+   DESKTOP OPTIMIZATIONS (1025px+)
+   ============================================ */
+
+@media (min-width: 1025px) {
+  :root {
+    --container-padding: var(--container-padding-desktop);
+  }
+
+  .container,
+  main,
+  section,
+  article {
+    padding: var(--container-padding-desktop);
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  button,
+  a[role="button"] {
+    min-height: 36px;
+    padding: 8px 24px;
+    font-size: var(--font-size-desktop);
+  }
+
+  .game-canvas {
+    aspect-ratio: 16 / 9;
+  }
+
+  .hud {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-lg);
+  }
+
+  .button-group {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ============================================
+   ORIENTATION HANDLING
+   ============================================ */
+
+@media (orientation: portrait) {
+  .game-canvas {
+    max-height: 50vh;
+  }
+
+  .ui-overlay {
+    height: auto;
+  }
+}
+
+@media (orientation: landscape) {
+  .game-canvas {
+    max-height: 80vh;
+  }
+
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* ============================================
+   DEVICE-SPECIFIC FIXES
+   ============================================ */
+
+/* iPhone notch support */
+@supports (padding: max(0px)) {
+  .safe-area {
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-left: max(12px, env(safe-area-inset-left));
+  }
+}
+
+/* High DPI screens */
+@media (min-resolution: 2dppx) {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Dark mode optimization */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+}
+
+/* Accessibility: Keyboard navigation */
+:focus-visible {
+  outline: 2px solid #4299e1;
+  outline-offset: 2px;
+}
+
+/* Remove default focus for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+/* GPU acceleration */
+.animate,
+.game-canvas,
+.sprite {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Contain layout for performance */
+.hud,
+.ui-panel,
+.game-container {
+  contain: layout style paint;
+}
+
+/* Optimize scrolling performance */
+.scrollable,
+.list {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
