@@ -26,12 +26,12 @@ export default function App() {
         default: 'arcade',
         arcade: { gravity: { y: 300 } },
       },
-      scene: [BattleScene, MainMenuScene, CompleteGameScene],
+      scene: [MainMenuScene, BattleScene, CompleteGameScene],
     }
 
     const game = new Phaser.Game(config)
     window.game = game
-    game.scene.start('BattleScene')
+    game.scene.start('MainMenuScene')
 
     return () => { game.destroy(true) }
   }, [])
