@@ -126,29 +126,33 @@ export default class CompleteGameScene extends Phaser.Scene {
     )
     this.player.rotation = angle
 
-    this.enemies?.children.forEach((enemy: any) => {
-      const distance = Phaser.Math.Distance.Between(
-        enemy.x, enemy.y,
-        this.player!.x, this.player!.y
-      )
-
-      if (distance > 0) {
-        const vx = ((this.player!.x - enemy.x) / distance) * enemy.speed
-        const vy = ((this.player!.y - enemy.y) / distance) * enemy.speed
-        enemy.setVelocity(vx, vy)
-
-        enemy.rotation = Phaser.Math.Angle.Between(
+    if (this.enemies) {
+      this.enemies.children.entries.forEach((enemy: any) => {
+        const distance = Phaser.Math.Distance.Between(
           enemy.x, enemy.y,
           this.player!.x, this.player!.y
         )
-      }
-    })
 
-    this.bullets?.children.forEach((bullet: any) => {
-      if (bullet.x < 0 || bullet.x > 800 || bullet.y < 0 || bullet.y > 600) {
-        bullet.destroy()
-      }
-    })
+        if (distance > 0) {
+          const vx = ((this.player!.x - enemy.x) / distance) * enemy.speed
+          const vy = ((this.player!.y - enemy.y) / distance) * enemy.speed
+          enemy.setVelocity(vx, vy)
+
+          enemy.rotation = Phaser.Math.Angle.Between(
+            enemy.x, enemy.y,
+            this.player!.x, this.player!.y
+          )
+        }
+      })
+    }
+
+    if (this.bullets) {
+      this.bullets.children.entries.forEach((bullet: any) => {
+        if (bullet.x < 0 || bullet.x > 800 || bullet.y < 0 || bullet.y > 600) {
+          bullet.destroy()
+        }
+      })
+    }
 
     this.physics.overlap(this.bullets, this.enemies, this.bulletHitEnemy, null, this)
     this.physics.overlap(this.player, this.enemies, this.enemyHitPlayer, null, this)
